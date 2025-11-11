@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8" />
+<title>書籍推薦查詢</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial;max-width:900px;margin:40px auto;padding:0 16px}
+  input,button{padding:8px 10px;font-size:16px}
+  .book{padding:10px 0;border-bottom:1px solid #e5e5e5}
+  .err{color:#c00;white-space:pre-wrap}
+</style>
+<h2>📚 書籍推薦查詢</h2>
+<input id="q" size="50" placeholder="輸入關鍵字，例如：佛教 心靈 成長" />
+<button id="go">查詢</button>
+<p class="err" id="err"></p>
+<div id="res"></div>
+
+
+
+<script>
+const API = "http://127.0.0.1:8001/search";
+
+document.getElementById('go').addEventListener('click', run);
+document.getElementById('q').addEventListener('keydown', e => { if (e.key==='Enter') run(); });
+
+async function run() {
+  const q = document.getElementById('q').value.trim();
+  const err = document.getElementById('err');
+  const res = document.getElementById('res');
+  err.textContent = ''; res.innerHTML = '';
+
+  if (!q) { err.textContent = '請輸入關鍵字'; return; }
+
+  try {
+    const r = await fetch(API, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ query: q, top_k_chunks: 50, final_n: 5 })
+    });
+
+    // 把非 200 的錯誤也顯示出來（避免「沒有值」卻沒提示）
+    if (!r.ok) {
+      const txt = await r.text();
+      throw new Error(`HTTP ${r.status} ${r.statusText}\n${txt}`);
+    }
+
+    const data = await r.json();
+    if (!data || !Array.isArray(data.items)) {
+      throw new Error('回傳格式不符合預期');
+    }
+
+    if (data.items.length === 0) {
+      res.innerHTML = '<p>（沒有查到結果，換個關鍵字試試）</p>';
+      return;
+    }
+
+    res.innerHTML = `<p>共 ${data.count} 本：</p>` + data.items.map((b,i)=>`
+      <div class="book">
+        <b>[${i+1}] ${b.title ?? '(無標題)'}</b><br>
+        作者：${b.author ?? '—'}　分類：${b.cat ?? '—'}　出版社：${b.publisher ?? '—'}<br>
+        分數：${(b.score ?? 0).toFixed(4)}
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error(e);
+    err.textContent = `查詢失敗：\n${e.message}`;
+  }
+}
+</script>
