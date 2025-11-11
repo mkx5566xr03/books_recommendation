@@ -14,13 +14,13 @@ from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
 
-# ====== 載入 .env（若有）======
+# ====== 載入 .env ======
 load_dotenv(override=True)
 
 # ====== FastAPI 實例 ======
 app = FastAPI(title="Books RAG ReadOnly API", version="1.0.0")
 
-# ====== 全域設定（可用環境變數覆寫）======
+# ====== 全域設定 ======
 INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "at-rag-01")
 NAMESPACE  = os.getenv("PINECONE_NAMESPACE", "tz_books")
 MODEL_NAME = os.getenv("EMBED_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
@@ -29,7 +29,7 @@ DST_DIM    = int(os.getenv("DST_DIM", 1536))  # Pinecone index 維度
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],      # 或改成 ["http://127.0.0.1:5500", "http://localhost:5500"]
+    allow_origins=["*"],      # 可改成 ["http://127.0.0.1:5500", "http://localhost:5500"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -261,7 +261,7 @@ def search(req: SearchRequest):
         clauses.append({"vector_type": {"$in": req.vector_types}})
     flt = None if not clauses else (clauses[0] if len(clauses) == 1 else {"$and": clauses})
 
-    # 3) 查 Pinecone（chunk 級）
+    # 3) 查 Pinecone （文段 chunk 級）
     res = pinecone_query(qvec, top_k=req.top_k_chunks, flt=flt)
 
     # 4) 聚合（書籍級）
