@@ -33,19 +33,20 @@
 5.進行去重與多樣化篩選  
 6.輸出可信度較高的 Top-5 書籍  
 
-**架構流程圖**
+**架構流程圖**  
+
 使用者查詢  
-↓
+↓  
 Embedding（Local Model）  
-↓
+↓  
 Pinecone 語意檢索（Vector Search）  
-↓
+↓  
 聚合同書段落 → 書籍層級  
-↓
+↓  
 可解釋權重 Re-score（Title / Category / Publisher / Body）  
-↓
+↓  
 多樣化推薦與可信篩選  
-↓
+↓  
 Top-5 書籍輸出  
 
 FastAPI 另外提供 30 秒快取，避免大量相同請求造成搜尋成本浪費。  
